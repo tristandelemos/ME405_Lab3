@@ -13,3 +13,9 @@ Figure 1
 Figure 2
 
 ![Figure 1](20ms_Step.png)
+
+
+To Do
+
+Rewrite program so no queues and shares are used (send data from same task as motor controller)
+Rewrite C-Python program to accept 2 streams of data simultaneously
