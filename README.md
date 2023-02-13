@@ -7,9 +7,9 @@ When running the program at period length of 20 milliseconds, shown in Figure 2,
 
 Figure 1
 
-![Figure 1](image.jpg)
+![Figure 1](30ms_Step.png)
 
 
 Figure 2
 
-![Figure 1](image.jpg)
+![Figure 1](20ms_Step.png)
