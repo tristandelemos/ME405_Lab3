@@ -28,15 +28,6 @@ def task1_fun(shares):
     """
     # Get references to the share and queue which have been passed to this task
     my_share, my_queue = shares
-    u2 = pyb.UART(2, baudrate=115200, timeout = 65383)
-    enc = EncoderDriver(pyb.Pin.board.PB6, pyb.Pin.board.PB7, 4)
-    motor = MotorDriver (pyb.Pin.board.PA10,pyb.Pin.board.PB4,pyb.Pin.board.PB5,3)
-    con = ProControl()
-    read = enc.read()
-    pos = 0
-    
-    con.set_setpoint(int(u2.readline()))
-    con.set_Kp(float(u2.readline()))
     
     read = enc.read()
     pos = 0
@@ -61,7 +52,7 @@ def task1_fun(shares):
         read,pos = enc.update(read,pos)
         #position.append(pos)
         time = (utime.ticks_diff(utime.ticks_ms(),start))
-        for x in (f"{time},{pos}\r\n".encode()):
+        for x in (bytes(f"{time},{pos}\r\n",'ascii')):
             my_queue.put(x)
         #my_queue.put(f"{time},{pos}\r\n")
         effort = con.run(pos)
@@ -88,11 +79,13 @@ def task2_fun(shares):
     the_share, the_queue = shares
     
     while True:
-        for x in the_queue:
+        print('Task 2')
+        while q0.any():
+            x = the_queue.get().to_bytes(1,'big')
             u2.write(x)
-            
-        u2.write(b'done\r\n')
-        yield
+            yield
+        u2.write(b'done\r\n') # This is in the wrong place fix it
+        
 
     #while True:
     #    # Show everything currently in the queue and the value in the share
@@ -110,19 +103,28 @@ def task2_fun(shares):
 if __name__ == "__main__":
     
     
-
+    u2 = pyb.UART(2, baudrate=115200, timeout = 65383)
+    enc = EncoderDriver(pyb.Pin.board.PB6, pyb.Pin.board.PB7, 4)
+    motor = MotorDriver (pyb.Pin.board.PA10,pyb.Pin.board.PB4,pyb.Pin.board.PB5,3)
+    con = ProControl()
+    read = enc.read()
+    pos = 0
+    
+    con.set_setpoint(int(u2.readline()))
+    con.set_Kp(float(u2.readline()))
+    
     # Create a share and a queue to test function and diagnostic printouts
-    share0 = task_share.Share('b', thread_protect=False, name="Share 0")
-    q0 = task_share.Queue('b', 4000, thread_protect=False, overwrite=False,
+    share0 = task_share.Share('B', thread_protect=False, name="Share 0")
+    q0 = task_share.Queue('B', 4000, thread_protect=False, overwrite=False,
                           name="Queue 0")
 
     # Create the tasks. If trace is enabled for any task, memory will be
     # allocated for state transition tracing, and the application will run out
     # of memory after a while and quit. Therefore, use tracing only for 
     # debugging and set trace to False when it's not needed
-    task1 = cotask.Task(task1_fun, name="Task_1", priority=2, period=10,
+    task1 = cotask.Task(task1_fun, name="Task_1", priority=1, period=10,
                         profile=False, trace=False, shares=(share0, q0))
-    task2 = cotask.Task(task2_fun, name="Task_2", priority=1, period=2500,
+    task2 = cotask.Task(task2_fun, name="Task_2", priority=0, period=10,
                         profile=False, trace=False, shares=(share0, q0))
     cotask.task_list.append(task1)
     cotask.task_list.append(task2)
