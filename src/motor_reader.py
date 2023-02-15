@@ -17,26 +17,24 @@ def main():
        response. The data is then plotted and displayed.
    """
     
-   x_list = []
-   y_list = []
+   m1_x_list = []
+   m1_y_list = []
+   m2_x_list = []
+   m2_y_list = []
 
    with serial.Serial('COM4', 115200,timeout = 3) as s_port:
        #
-       # send kp value
-       time.sleep(1)
-       s_port.write(b'16384\r\n')
-       time.sleep(1)
-       s_port.write(b'0.2\r\n')
-       time.sleep(1)
+       # send ready statement
+       s_port.write(b'ready\r\n')
        
        while True:
            sline = s_port.readline()
            print(sline)
-           if sline==b'done\r\n':
+           if sline==b'end\r\n':
                break
         
            try:
-                data1, data2 = sline.split(b',')
+                motor, data1, data2 = sline.split(b',')
                 data2 = data2.split(b'\r')[0]
                 d1stat, d2stat = True, True
                 
@@ -44,26 +42,32 @@ def main():
                     data1 = float(data1)
                 except (ValueError):
                     d1stat = False
-                    print("data in column 1 is corrupt")
+                    print("Data in column 1 is corrupt")
                 
                 try:
                     data2 = float(data2)
                 except(ValueError):
                     d2stat = False
-                    print("data in column 2 is corrupt")
+                    print("Data in column 2 is corrupt")
 
                 if (d1stat and d2stat):
-                    x_list.append(data1)
-                    y_list.append(data2)
+                    if motor == b'motor 1':
+                        m1_x_list.append(data1)
+                        m1_y_list.append(data2)
+                    elif motor == b'motor 2':
+                        m2_x_list.append(data1)
+                        m2_y_list.append(data2)
            except:
                 # line not formatted correctly
                 print("list is not in the expected format")
                 
             
             
-       pyplot.plot(x_list, y_list, 'go-')
+       pyplot.plot(m1_x_list, m1_y_list, 'go-',label="Motor_1")
+       pyplot.plot(m2_x_list, m2_y_list, 'ro-',label="Motor_2")
        pyplot.xlabel("Time [ms]")
        pyplot.ylabel("Position [enc counts]")
+       pyplot.legend()
        pyplot.show()
             
         #for i in range(len(x_list)):
